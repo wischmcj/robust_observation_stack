@@ -10,6 +10,7 @@
     warrior_script_template: "../templates/start.sh"
     cadvisor_version: v0.46.0
     watchtower_version: latest
+    ports: 2
     # port: 8001 # used for warrior and metrics svr
   tasks:
     # - name: Generate Prometheus config from template
@@ -51,11 +52,11 @@
           - /dev/disk/:/dev/disk:ro
         published_ports: "9101:8080"
 
-    # - name: Generate Warrior env file from template
-    #   ansible.builtin.template:
-    #     src: "{{ warrior_env_template }}"
-    #     dest: /tmp/env
-    #     mode: '0644'
+    - name: Create start script from template for worker containers 
+      ansible.builtin.template:
+        src: "{{ warrior_script_template }}"
+        dest: /srv/start.sh
+        mode: '0644'
 
     # - name: Generate Warrior run script from template
     #   ansible.builtin.template:
