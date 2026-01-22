@@ -27,3 +27,5 @@ crash.*.log
 metrics_server/files/package.json
 metrics_server/files/package-lock.json
 test.log
+ansible/inventory/hosts.yml
+ansible/observer_vars.yml
