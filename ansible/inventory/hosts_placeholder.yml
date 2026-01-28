@@ -1,4 +1,21 @@
-[all]
-penguasaur
-penguapi
-TowerUbuntu
+lts:
+  hosts:
+    observer1:
+      ansible_ssh_private_key_file: "my-key-location/id_rsa"
+      ansible_host: 
+      ansible_user: my-user
+      ansible_sudo_password: ""
+workers:
+  hosts:
+    worker1:
+      ansible_host: 
+      ansible_sudo_password: ""
+      ansible_become: true
+local:
+  hosts:
+    worker2:
+      ansible_host: localhost
+      ansible_connection: local
+      ansible_user: 
+      ansible_sudo_password: ""
+      ansible_become: true
