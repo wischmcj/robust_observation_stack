@@ -1,0 +1,46 @@
+---
+# Install Docker (Desktop) on macOS using Homebrew.
+# Targets Mac hosts only (e.g. penguamac).
+- name: Docker install (macOS via Homebrew)
+  hosts: mac_workers
+  become: false
+  vars:
+    # Homebrew path: Apple Silicon vs Intel
+    brew_bin: "/usr/local/bin/brew"
+    container_count: 1
+    default_container_name: docker
+    default_container_image: ubuntu
+    default_container_command: sleep 1d
+  tasks:
+    - name: Ensure Homebrew is installed
+      ansible.builtin.shell: |
+        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+      args:
+        creates: "{{ brew_bin }}"
+      environment:
+        NONINTERACTIVE: "1"
+
+    - name: Ensure Homebrew is installed
+      ansible.builtin.shell: |
+        sudo hdiutil attach Docker.dmg
+        sudo /Volumes/Docker/Docker.app/Contents/MacOS/install
+        sudo hdiutil detach /Volumes/Docker
+      args:
+        creates: "{{ brew_bin }}"
+      environment:
+        NONINTERACTIVE: "1"
+
+    - name: Install Docker Desktop (cask)
+      ansible.builtin.shell: "{{ brew_bin }} install colima docker"
+
+    - name: Ensure Python is installed (for Docker Python module)
+      ansible.builtin.shell: "{{ brew_bin }} install python"
+      args:
+        creates: "{{ brew_bin.replace('/brew', '/python3') }}"
+        
+    - name: Install Docker Python package
+      ansible.builtin.shell: "/Users/penguaman/.local/pipx/shared/bin/pip3 install requests docker"
+
+    - name: Start Docker daemon
+      ansible.builtin.shell: "colima start"
+    
