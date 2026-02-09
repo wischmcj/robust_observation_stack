@@ -33,4 +33,3 @@ ansible/hosts
 
 references/*
 .envrc
-.envrc
