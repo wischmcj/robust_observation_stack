@@ -69,18 +69,4 @@
       ansible.builtin.pip:
         name: docker
 
-    - name: Add DO agent apt key
-      ansible.builtin.apt_key:
-        url: https://repos.insights.digitalocean.com/sonar-agent.asc
-        state: present
-
-    - name: Add DO agent repository
-      ansible.builtin.apt_repository:
-        repo: deb https://repos.insights.digitalocean.com/apt/do-agent main main
-        filename: digitalocean-agent
-        state: present
-
-    - name: Install DO agent
-      ansible.builtin.apt:
-        pkg: do-agent
-        state: present
+    

@@ -1,0 +1,9 @@
+
+container_count: 1
+docker_container_name: prometheus
+default_container_image: ubuntu
+default_container_command: sleep 1d
+warrior_env_template: "../templates/env"
+warrior_script_template: "../templates/start.sh"
+cadvisor_version: v0.46.0
+watchtower_version: latest

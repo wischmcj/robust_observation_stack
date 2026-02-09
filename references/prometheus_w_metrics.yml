@@ -1,0 +1,181 @@
+- name: Prometheus-install
+  hosts: penguasaur
+  become: true
+  vars_files:
+    - ../observer_vars.yml
+  vars:
+    container_count: 1
+    docker_container_name: prometheus
+    default_container_image: ubuntu
+    default_container_command: sleep 1d
+    prometheus_config_template: "../roles/observer/templates/prometheus/prometheus.yml"
+    prometheus_config: "/prometheus.yml"
+    grafana_config_template: "../roles/observer/templates/grafana/all.yml"
+    grafana_source: "../roles/observer/files/grafana"
+    # prometheus_remote_path: "/prometheus.yml"
+    # prometheus_directory: "/prometheus"
+    # docker_container_name: "prometheus"
+  tasks:
+    - name: Create Folder /srv/prometheus if not exist
+      ansible.builtin.file:
+        path: /srv/prometheus
+        mode: '0755'
+        state: directory
+
+    # - name: Create Folder /srv/alertmanager if not exist
+    #   ansible.builtin.file:
+    #     path: /srv/alertmanager
+    #     mode: '0755'
+    #     state: directory
+
+    - name: Create Folder /srv/grafana if not exist
+      ansible.builtin.file:
+        path: /srv/grafana
+        mode: '0755'
+        state: directory
+  
+    - name: Create Folder /srv/grafana if not exist
+      ansible.builtin.file:
+        path: /srv/grafana/provisioning/datasources
+        mode: '0755'
+        state: directory
+
+    - name: Create Folder /srv/metrics_server if not exist
+      ansible.builtin.file:
+        path: /srv/metrics_server
+        mode: '0755'
+        state: directory
+
+    - name: Generate Prometheus config from template
+      ansible.builtin.template:
+        src: "{{ prometheus_config_template }}"
+        dest: /srv/prometheus/prometheus.yml
+        mode: '0644'
+
+    - name: Create grafana configuration files
+      ansible.builtin.copy:
+        src: "{{ grafana_source }}"
+        dest: /srv/
+        mode: '0644'
+
+    - name: Generate Grafana data source config from template
+      ansible.builtin.template:
+        src: "{{ grafana_config_template }}"
+        dest: /srv/grafana/provisioning/datasources/all.yml
+        mode: '0644'
+
+    - name: Generate metrics_server config from template
+      ansible.builtin.template:
+        src: "../templates/metrics_server/metrics.js"
+        dest: /srv/metrics_server/metrics.js
+        mode: '0644'
+
+    - name: Create metrics_server configuration files
+      ansible.builtin.copy:
+        src: "../templates/metrics_server/package.json"
+        dest: /srv/metrics_server/package.json
+        mode: '0644'
+
+
+    - name: Create Prometheus container
+      community.docker.docker_container:
+        name: prometheus
+        restart_policy: always
+        network_mode: host
+        image: prom/prometheus
+        volumes:
+          # - /prometheus.yml:/etc/prometheus/prometheus.yml
+          - /srv/prometheus:/etc/prometheus
+          - prometheus_data:/prometheus
+        command: >
+          --config.file=/etc/prometheus/prometheus.yml
+          --storage.tsdb.path=/prometheus
+          --web.console.libraries=/etc/prometheus/console_libraries
+          --web.console.templates=/etc/prometheus/consoles
+          --web.enable-lifecycle
+        published_ports: "9090:9090"
+
+  # --storage.tsdb.path=/prometheus
+          # --web.console.libraries=/etc/prometheus/console_libraries
+          # --web.console.templates=/etc/prometheus/consoles
+          # --web.enable-lifecycle
+
+    - name: Create Grafana container
+      community.docker.docker_container:
+        name: grafana
+        restart_policy: always
+        image: grafana/grafana
+        volumes:
+          - grafana-data:/var/lib/grafana
+          - /srv/grafana/provisioning:/etc/grafana/provisioning
+          - /srv/grafana/dashboards:/var/lib/grafana/dashboards
+        env:
+          GF_AUTH_ANONYMOUS_ENABLED: "true"
+          GF_AUTH_ANONYMOUS_ORG_ROLE: "Admin"
+        published_ports: "3000:3000"
+  
+    - name: Stop and remove the container "metrics_container"
+      community.docker.docker_container:
+        name: metrics_container
+        state: absent
+  
+    - name: Create Metrics Server container
+      community.docker.docker_container:
+        name: metrics_container
+        restart_policy: always
+        network_mode: host
+        image: node:8
+        volumes:
+          - /srv/metrics_server:/usr/src/app
+        working_dir: /usr/src/app
+        published_ports: "3100:3100"
+        command: >
+          /bin/bash -c 'npm install && node metrics.js'
+
+
+# resource "null_resource" "ws_metrics" {
+#   count  = "${var.do_observers}"
+
+#   provisioner "remote-exec" {
+#     inline = [
+#       "mkdir /metrics || true",
+#     ]
+#   }
+
+#   provisioner "file" {
+#     content = templatefile("metrics/metrics.js",
+#       {
+#         nodes = "${jsonencode(digitalocean_droplet.archiveteam.*.ipv4_address)}"
+#         ports = "${var.warriors_per_host}"
+#         username = "${var.warrior_username}"
+#         password = "${var.warrior_password}"
+#       })
+#     # content = module.template_files.files.metrics
+#     destination = "/metrics/metrics.js"
+#   }
+#   // loads dependency list to droplet
+#   provisioner "file" {
+#     source = "metrics/package.json"
+#     destination = "/metrics/package.json"
+#   }
+  
+#   provisioner "remote-exec" {
+#     inline = [
+#       "docker stop metrics && docker rm metrics || true",
+#       "docker run -d --restart=always --net=host --name metrics --publish 3100:3100 -v /metrics:/usr/src/app -w /usr/src/app node:8 bash -c 'npm install && node metrics.js'",
+#     ]
+#   }
+# }
+
+    # - name: Create Alertmanager container
+    #   community.docker.docker_container:
+    #     name: alertmanager
+    #     restart_policy: always
+    #     image: prom/alertmanager
+    #     volumes:
+    #       - alertmanager-data:/data
+    #       - /srv/alertmanager:/config
+    #     command: >
+    #       --config.file=/config/alertmanager.yml
+    #       --log.level=debug
+    #     published_ports: "9093:9093"
