@@ -1,4 +1,4 @@
-lts:
+observer:
   hosts:
     observer1:
       ansible_ssh_private_key_file: "my-key-location/id_rsa"
@@ -11,11 +11,19 @@ workers:
       ansible_host: 
       ansible_sudo_password: ""
       ansible_become: true
-local:
-  hosts:
     worker2:
       ansible_host: localhost
       ansible_connection: local
       ansible_user: 
       ansible_sudo_password: ""
       ansible_become: true
+
+mac_workers:
+  hosts:
+    <mac_worker_name>:
+      ansible_ssh_private_key_file: ""
+      ansible_host: 
+      ansible_user: penguaman
+      ansible_sudo_password: ""
+      ansible_password: ""
+      ansible_python_interpreter: "/Users/<>/.local/pipx/shared/bin/python"
