@@ -5,3 +5,13 @@
   become_method: sudo
   roles:
     - target
+
+- name: Worker
+  hosts: mac_workers
+  become: true
+  become_user: root
+  become_method: sudo
+  environment:
+    DOCKER_HOST: "unix:///Users/penguaman/.colima/default/docker.sock"
+  roles:
+    - target

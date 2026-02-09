@@ -1,9 +1,9 @@
 - name: Observer
-  hosts: penguasaur
+  hosts: observer
   become: true
   become_user: root
   become_method: sudo
   vars_files:
-    - /vars/observer_vars.yml
+    - ../observer_vars.yml
   roles:
     - observer
