@@ -30,3 +30,7 @@ test.log
 ansible/inventory/hosts.yml
 ansible/observer_vars.yml
 ansible/hosts
+
+references/*
+.envrc
+.envrc
