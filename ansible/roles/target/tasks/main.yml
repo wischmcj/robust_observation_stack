@@ -5,6 +5,7 @@
     network_mode: host
     pid_mode: host
     restart_policy: always
+    docker_host: "{{ ansible_env.DOCKER_HOST }}"
     image: prom/node-exporter
     volumes:
       - /proc:/host/proc:ro
